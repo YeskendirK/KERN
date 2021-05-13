@@ -12,10 +12,13 @@ from torch.optim import lr_scheduler
 from tqdm import tqdm
 
 from torch.utils.tensorboard import SummaryWriter
+import argparse
+from pathlib import Path
+from utility import increment_dir
 
 
-def train(conf):
-    ori_path = "%s_%d/" %(conf["dataset"], conf["output_len"])
+def train(conf, opt):
+    ori_path = "%s_%d__" %(conf["dataset"], conf["output_len"])
     settings = []
     if conf["use_grp_embed"] is False:
         settings.append("NoGrpEmb")
@@ -24,12 +27,11 @@ def train(conf):
     if conf["int_kg"] is True:
         settings.append("IntKG_lambda:%.6f__SampleRange:%d" %(conf["triplet_lambda"], conf["sample_range"]))
     setting = ori_path + "__".join(settings)
-        
-    if not os.path.isdir("./runs"):
-        os.makedirs("./runs")
-    run_dir = "./runs/%s" %(setting)
-    log = SummaryWriter(run_dir)
-    log_dir = "./log/%s" %(setting)
+
+    # if not os.path.isdir("./runs"):
+    #     os.makedirs("./runs")
+    log = SummaryWriter(log_dir=increment_dir(Path(opt.logdir) / 'exp', setting + opt.name))
+    log_dir = Path(log.log_dir)
     if not os.path.isdir(log_dir):
         os.makedirs(log_dir)
 
@@ -207,14 +209,19 @@ def denorm(seq, norms):
     return denorm_res
 
 
-def main():
+def main(opt):
     conf = yaml.load(open("./config.yaml"))
-    dataset_name = "geostyle" # options: fit, geostyle
+    dataset_name = opt.dataset # options: fit, geostyle
     conf = conf[dataset_name]
     conf["dataset"] = dataset_name
 
-    train(conf)
+    train(conf, opt)
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset', type=str, default='fit', help='dataset: fir or geostyle')
+    parser.add_argument('--logdir', type=str, default='runs/', help='logging directory')
+    parser.add_argument('--name', default='', help='adds name to default name if needed')
+    opt = parser.parse_args()
+    main(opt)

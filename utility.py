@@ -3,6 +3,8 @@ import yaml
 import numpy as np
 import random
 random.seed(1234)
+from pathlib import Path
+import glob
 
 import torch
 torch.manual_seed(1234)
@@ -283,3 +285,12 @@ class TrendData(Dataset):
         print("train data: ", train_data.shape)
         print("test data: ", test_data.shape)
         return train_data, train_ids, train_norm, train_grps, train_eles, test_data, test_ids, test_norm, test_grps, test_eles, train_city, train_gender, train_age, test_city, test_gender, test_age
+
+def increment_dir(dir, comment=''):
+    # Increments a directory runs/exp1 --> runs/exp2_comment
+    n = 0   # number
+    dir = str(Path(dir))    # os-agnostic
+    d = sorted(glob.glob(dir + '*'))  # directories
+    if len(d):
+        n = max([int(x[len(dir):x.find('_', len(dir)) if '_' in x else None]) for x in d]) + 1  # increment
+    return dir + str(n) + ('_' + comment if comment else '')
