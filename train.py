@@ -14,7 +14,7 @@ from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 import argparse
 from pathlib import Path
-from utility import increment_dir
+from utility import increment_dir, select_device
 
 
 def train(conf, opt):
@@ -35,7 +35,7 @@ def train(conf, opt):
     if not os.path.isdir(log_dir):
         os.makedirs(log_dir)
 
-    if conf["dataset"] == "fit":
+    if conf["dataset"] in  ["fit", "omnious"]:
         from utility import TrendDataset, TrendData
     else:
         from utility_geostyle import TrendDataset, TrendData
@@ -49,13 +49,14 @@ def train(conf, opt):
         conf["gender_num"] = len(dataset.gender_id_map)
         conf["age_num"] = len(dataset.age_id_map)
 
+    device = device = select_device(opt.device, batch_size=opt.batch_size)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     conf["device"] = device
 
     for k, v in conf.items():
         print(k, v)
 
-    if conf["dataset"] == "fit":
+    if conf["dataset"] in ["fit", "omnious"]:
         model = KERN(conf, dataset.adj)
     else:
         model = KERNGeoStyle(conf)
@@ -164,7 +165,7 @@ def evaluate(model, dataset, device, conf):
 
         pbar.set_description('L:{:.6f}, EL:{:.6f}, DL:{:.6f}'.format(loss_print/(batch_i+1), enc_loss_print/(batch_i+1), dec_loss_print/(batch_i+1)))
 
-        if conf["dataset"] == "fit":
+        if conf["dataset"] in ["fit", "omnious"]:
             [input_seq, output_seq, grp_id, ele_id, norm, city_id, gender_id, age_id] = each_cont 
         else:
             [input_seq, output_seq, grp_id, ele_id, norm] = each_cont 
@@ -220,8 +221,9 @@ def main(opt):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, default='fit', help='dataset: fir or geostyle')
+    parser.add_argument('--dataset', type=str, default='fit', help='dataset: fit or geostyle or omnious')
     parser.add_argument('--logdir', type=str, default='runs/', help='logging directory')
     parser.add_argument('--name', default='', help='adds name to default name if needed')
+    parser.add_argument('--device', default='0', help='cuda device, i.e. 0 or cpu')
     opt = parser.parse_args()
     main(opt)

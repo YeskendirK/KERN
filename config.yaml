@@ -43,3 +43,27 @@ geostyle:
   feat_size: 10
   rnn_hidden_size: 50
   denorm: true # whether to denormalization after the predction
+
+omnious:
+  data_path: "./dataset/omnious/21052021_data.json"
+#  data_norm_path: "./dataset/omnious/FIT_data_norm.json"
+#  group_affiliation_adj_path: "./dataset/FIT/kg_group_adj_normed.json"
+#  affiliation_adj_path: "./dataset/FIT/kg_adj_normed.json"
+#  dist_mat_path: "./dataset/FIT/dist_mat.npy"
+  input_len: 12
+  output_len: 6
+  ext_kg: false # whether to use external knowledge: the message passing over taxonomy tree
+  int_kg: false # whether to use internal knowledge: the triplet regularization term
+  triplet_lambda: 0.0002
+  sample_range: 50
+  use_grp_embed: True # whether use user embedding
+  lr: 0.001
+  lr_decay_interval: 20
+  lr_decay_gamma: 0.1
+  test_interval: 1
+  optimizer: "adam" # options: adam, sgd
+  epoch: 20
+  batch_size: 400
+  feat_size: 10
+  rnn_hidden_size: 50
+  denorm: false # whether to denormalization after the predction
