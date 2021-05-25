@@ -32,7 +32,7 @@ class KERN(nn.Module):
 
         self.grp_embeds = nn.Embedding(self.conf["grp_num"], self.conf["feat_size"])
         self.ele_embeds = nn.Embedding(self.conf["ele_num"], self.conf["feat_size"])
-        if self.conf["dataset"] == "fit":
+        if self.conf["dataset"] == "fit" or self.conf["dataset"] == "omnious":
             self.city_embeds = nn.Embedding(self.conf["city_num"], self.conf["feat_size"])
             self.gender_embeds = nn.Embedding(self.conf["gender_num"], self.conf["feat_size"])
             self.age_embeds = nn.Embedding(self.conf["age_num"], self.conf["feat_size"])
