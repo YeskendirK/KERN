@@ -205,6 +205,15 @@ class TrendData(Dataset):
             self.dist_mat = self.generate_dist_mat(trends_for_train)
             np.save(self.conf["dist_mat_path"], self.dist_mat)
 
+        if "log" in self.conf:
+            json.dump(grp_ele_id,
+                      open("%s/%s_%d/test_grp_ele_id_map.json" % (
+                      self.conf['log'], self.conf["dataset"], self.conf["output_len"]), "w"),
+                      indent=4)
+        else:
+            json.dump(grp_ele_id,
+                      open("./log/%s_%d/test_grp_ele_id_map.json"%(self.conf["dataset"],self.conf["output_len"]),"w"),
+                      indent=4)
 
         json.dump(grp_ele_id,
                   open("./log/%s_%d/test_grp_ele_id_map.json" % (self.conf["dataset"], self.conf["output_len"]), "w"),
