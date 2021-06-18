@@ -99,7 +99,7 @@ def train(conf, opt):
         print("lr_scheduler is Plateau")
         ttl_batch = len(dataset.train_set) / conf["batch_size"]
         exp_lr_scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', threshold_mode='abs', factor=0.5,
-                                                          patience=2,
+                                                          patience=2*ttl_batch,
                                                           verbose=True)
     elif conf["lr_scheduler"] == "CosineAnnealing":
         print("lr_scheduler is CosineAnnealing")
@@ -173,9 +173,9 @@ def train(conf, opt):
             enc_loss, dec_loss, triplet_loss = model(self_cont, close_cont, far_cont, close_score, far_score)
 
             if conf["int_kg"] is True:
-                loss = enc_loss + dec_loss + conf["triplet_lambda"] * triplet_loss
+                loss = 0.25 * enc_loss + 0.75 * dec_loss + conf["triplet_lambda"] * triplet_loss
             else:
-                loss = enc_loss + dec_loss
+                loss = 0.25 * enc_loss + 0.75 * dec_loss
             loss.backward()
             optimizer.step()
             if "lr_scheduler" in conf and conf["lr_scheduler"] == "Plateau":

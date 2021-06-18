@@ -28,6 +28,13 @@ class TrendDataset(Dataset):
         self.neibors_mat = np.argsort(dist_mat, axis=1)
         self.ttl_num = len(data)
         self.seq_num = dist_mat.shape[0]
+        self.ele_id_to_idx = {}
+        for idx in range(len(self.data)):
+            ele_id = self.eles[idx]
+            if ele_id not in self.ele_id_to_idx:
+                self.ele_id_to_idx[ele_id] = [idx]
+            else:
+                self.ele_id_to_idx[ele_id].append(idx)
 
     def __len__(self):
         return len(self.data)
@@ -49,8 +56,9 @@ class TrendDataset(Dataset):
 
     def __getitem__(self, idx):
         self_cont, _id = self.return_one(idx)
+        ele_id = self_cont[3].item() # each_ele
 
-        neibors = self.neibors_mat[_id].tolist()
+        neibors = self.neibors_mat[ele_id].tolist()
         # original sample methods, which is not effective
         """
         close_neibors = random.sample(neibors[0:self.thresh].tolist(), 2)
@@ -60,23 +68,28 @@ class TrendDataset(Dataset):
         # new sample methods, which can do hard negtive sample
         start_point = random.sample([x for x in range(self.seq_num - self.conf["sample_range"])], 1)[0]
         end_point = start_point + self.conf["sample_range"]
-        sample_neibors = random.sample(neibors[start_point:end_point], 3)
+        sample_neibors_ele_ids = random.sample(neibors[start_point:end_point], 3)
+        sample_neibors = [random.sample(self.ele_id_to_idx[x], 1)[0] for x in sample_neibors_ele_ids]
         filtered_neibors = []
-        for x in sample_neibors:
+        filtered_neibors_eles = []
+        for x_i,x in enumerate(sample_neibors):
             if x != _id:
                 filtered_neibors.append(x)
+                filtered_neibors_eles.append(sample_neibors_ele_ids[x_i])
         filtered_neibors = sorted(filtered_neibors)
 
         close_item = filtered_neibors[0]
-        ori_close_score = self.dist_mat[_id][close_item]
+        close_item_ele = filtered_neibors_eles[0]
+        ori_close_score = self.dist_mat[ele_id][close_item_ele]
         close_score = torch.FloatTensor([ori_close_score])
-        close_item_new = idx - (idx % self.seq_num) + close_item
+        close_item_new = close_item #idx - (idx % self.seq_num) + close_item
         close_cont, _ = self.return_one(close_item_new)
 
         far_item = filtered_neibors[1]
-        ori_far_score = self.dist_mat[_id][far_item]
+        far_item_ele = filtered_neibors_eles[1]
+        ori_far_score = self.dist_mat[ele_id][far_item_ele]
         far_score = torch.FloatTensor([ori_far_score])
-        far_item_new = idx - (idx % self.seq_num) + far_item
+        far_item_new = far_item #idx - (idx % self.seq_num) + far_item
         far_cont, _ = self.return_one(far_item_new)
 
         if far_score >= close_score:
@@ -122,6 +135,7 @@ class TrendData(Dataset):
         print(" __init__ TrendData ")
         self.conf = conf
         trends, grp_ids, ele_ids, self.time_num, trend_norm, location_ids, segment_ids, target_age_ids, self.grp_id_map, self.ele_id_map = self.get_ori_data()
+        print("length of trends & ele_ids", len(trends), len(ele_ids))
         train_data, train_ids, train_norm, train_grps, train_eles, test_data, test_ids, test_norm, test_grps, test_eles, train_location, train_segment, train_target_age, test_location, test_segment, test_target_age = self.preprocess_data(
             trends, trend_norm, grp_ids, ele_ids, location_ids, segment_ids, target_age_ids)
         print(train_grps.shape, train_location.shape, train_segment.shape, train_target_age.shape)
@@ -201,9 +215,14 @@ class TrendData(Dataset):
         if os.path.exists(self.conf["dist_mat_path"]):
             self.dist_mat = np.load(self.conf["dist_mat_path"])
         else:
+            self.dist_mat = self.generate_dist_mat(self.conf['fashion_data_path'], ele_id_map)
+            np.save(self.conf["dist_mat_path"], self.dist_mat)
+            '''
             trends_for_train = trends[:, :-self.conf["output_len"], 1]
             self.dist_mat = self.generate_dist_mat(trends_for_train)
             np.save(self.conf["dist_mat_path"], self.dist_mat)
+            '''
+
 
         if "log" in self.conf:
             json.dump(grp_ele_id,
@@ -215,9 +234,7 @@ class TrendData(Dataset):
                       open("./log/%s_%d/test_grp_ele_id_map.json"%(self.conf["dataset"],self.conf["output_len"]),"w"),
                       indent=4)
 
-        json.dump(grp_ele_id,
-                  open("./log/%s_%d/test_grp_ele_id_map.json" % (self.conf["dataset"], self.conf["output_len"]), "w"),
-                  indent=4)
+
         json.dump(location_id_map, open("location_id_map.json", "w"), indent=4)
         json.dump(segment_id_map, open("segment_id_map.json", "w"), indent=4)
         json.dump(target_age_id_map, open("target_age_id_map.json", "w"), indent=4)
@@ -230,6 +247,25 @@ class TrendData(Dataset):
         return trends, np.array(grp_ids), np.array(ele_ids), time_num, np.array(trend_norm), np.array(
             location_ids), np.array(segment_ids), np.array(target_age_ids), grp_id_map, ele_id_map
 
+    def generate_dist_mat(self, fashion_data_path, ele_id_map):
+        sequences = [[] for _ in range(len(ele_id_map.keys()))]
+        fashion_data = json.load(open(fashion_data_path))
+        for fashion, seq in fashion_data.items():
+            id_ = ele_id_map[fashion]
+            sequences[id_] = np.array([x[1] for x in seq])
+        sequences = np.array(sequences)
+
+        n_len = sequences.shape[0]
+        dist_mat = []
+        for a_id, a in tqdm(enumerate(sequences)):
+            a_broad = np.repeat(a[np.newaxis, :], n_len, axis=0)  # [n_len, seq_len]
+            mape = np.mean(np.abs(a_broad - sequences) / sequences, axis=-1) * 100  # [n_len]
+            dist_mat.append(mape)
+        dist_mat = np.stack(dist_mat, axis=0)  # [n_len, n_len]
+        return dist_mat
+
+
+    '''
     def generate_dist_mat(self, all_train):
         print(" generate_dist_mat ")
         # all_train: [n_len, seq_len]
@@ -241,6 +277,7 @@ class TrendData(Dataset):
             dist_mat.append(mape)
         dist_mat = np.stack(dist_mat, axis=0) # [n_len, n_len]
         return dist_mat
+    '''
 
     def preprocess_data(self, trends, trend_norm, grp_ids, ele_ids, location_ids, segment_ids, target_age_ids):
         print(" preprocess_data ")
