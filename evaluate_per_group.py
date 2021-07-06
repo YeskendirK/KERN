@@ -71,6 +71,14 @@ def main(opt):
             grp_name, mae_map[grp_name], mape_map[grp_name], val_mae_map[grp_name], val_mape_map[grp_name],
             test_mae_map[grp_name], test_mape_map[grp_name]))
 
+    print("--" * 10)
+    for grp_name in mae_map.keys():
+        if grp_name in grp_names:
+            continue
+        print("%s, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f" % (
+            grp_name, mae_map[grp_name], mape_map[grp_name], val_mae_map[grp_name], val_mape_map[grp_name],
+            test_mae_map[grp_name], test_mape_map[grp_name]))
+
 
 def evaluate(model, dataset, device, conf):
     model.eval()
@@ -117,6 +125,11 @@ def evaluate(model, dataset, device, conf):
             perGroup_grd[grp_name].append(torch.stack([output_seq[i, :, 1].cpu()]))
             perGroup_pred[grp_name].append(torch.stack([pred[i].cpu()]))
             perGroup_norm[grp_name].append(torch.stack([norm[i].cpu()]))
+            location_name, segment_name, target_age_name = grp_name.split("__")
+            for feat_name in [location_name, segment_name, target_age_name]:
+                perGroup_grd[feat_name].append(torch.stack([output_seq[i, :, 1].cpu()]))
+                perGroup_pred[feat_name].append(torch.stack([pred[i].cpu()]))
+                perGroup_norm[feat_name].append(torch.stack([norm[i].cpu()]))
 
     all_grd = torch.cat(all_grd, dim=0).numpy()
     all_pred = torch.cat(all_pred, dim=0).detach().numpy()
