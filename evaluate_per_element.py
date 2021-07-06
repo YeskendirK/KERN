@@ -66,19 +66,23 @@ def main(opt):
     ele_names = [key for key in dataset.ele_id_map.keys()]
 
     # write to tsv file
-    with open("./evaluation_per_element.tsv", "wt") as out_file:
-        tsv_writer = csv.writer(out_file, delimiter='\t')
-        tsv_writer.writerow(["GROUP", "MAE" , "MAPE" , "VAL_MAE" , "VAL_MAPE" , "TEST_MAE" , "TEST_MAPE"])
-        for ele_name in ele_names:
-            tsv_writer.writerow([ele_name, mae_map[ele_name], mape_map[ele_name], val_mae_map[ele_name], val_mape_map[ele_name],
-            test_mae_map[ele_name], test_mape_map[ele_name]])
-    '''        
+
+    # with open("./evaluation_per_element.tsv", "wt") as out_file:
+    #     tsv_writer = csv.writer(out_file, delimiter='\t')
+    #     tsv_writer.writerow(["GROUP", "MAE" , "MAPE" , "VAL_MAE" , "VAL_MAPE" , "TEST_MAE" , "TEST_MAPE"])
+    #     for ele_name in ele_names:
+    #         tsv_writer.writerow([ele_name, mae_map[ele_name], mape_map[ele_name], val_mae_map[ele_name], val_mape_map[ele_name],
+    #         test_mae_map[ele_name], test_mape_map[ele_name]])
+
     print("GROUP, MAE , MAPE , VAL_MAE , VAL_MAPE , TEST_MAE , TEST_MAPE ")
     for ele_name in ele_names:
+        if ele_name in mae_map.keys():
+            continue
         print("%s, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f" % (
             ele_name, mae_map[ele_name], mape_map[ele_name], val_mae_map[ele_name], val_mape_map[ele_name],
             test_mae_map[ele_name], test_mape_map[ele_name]))
-    '''
+
+
 
 def evaluate(model, dataset, device, conf):
     model.eval()
@@ -126,6 +130,11 @@ def evaluate(model, dataset, device, conf):
             perElement_grd[ele_name].append(torch.stack([output_seq[i, :, 1].cpu()]))
             perElement_pred[ele_name].append(torch.stack([pred[i].cpu()]))
             perElement_norm[ele_name].append(torch.stack([norm[i].cpu()]))
+            attribute, attribute_name = ele_name.split(":")
+            perElement_grd[attribute].append(torch.stack([output_seq[i, :, 1].cpu()]))
+            perElement_pred[attribute].append(torch.stack([pred[i].cpu()]))
+            perElement_norm[attribute].append(torch.stack([norm[i].cpu()]))
+
 
     all_grd = torch.cat(all_grd, dim=0).numpy()
     all_pred = torch.cat(all_pred, dim=0).detach().numpy()
