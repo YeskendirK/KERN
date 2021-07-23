@@ -223,21 +223,33 @@ class TrendData(Dataset):
             np.save(self.conf["dist_mat_path"], self.dist_mat)
             '''
 
-
         if "log" in self.conf:
+            Path("%s/%s" % (
+                      self.conf['log'], self.conf["data_path"].split('/')[-1].split('.')[0])).mkdir(parents=True, exist_ok=True)
             json.dump(grp_ele_id,
-                      open("%s/%s_%d/test_grp_ele_id_map.json" % (
-                      self.conf['log'], self.conf["dataset"], self.conf["output_len"]), "w"),
+                      open("%s/%s/test_grp_ele_id_map.json" % (
+                      self.conf['log'], self.conf["data_path"].split('/')[-1].split('.')[0]), "w"),
                       indent=4)
+            json.dump(location_id_map, open("%s/%s/location_id_map.json" % (
+                self.conf['log'], self.conf["data_path"].split('/')[-1].split('.')[0]), "w"), indent=4)
+            json.dump(segment_id_map, open("%s/%s/segment_id_map.json" % (
+                self.conf['log'], self.conf["data_path"].split('/')[-1].split('.')[0]), "w"), indent=4)
+            json.dump(target_age_id_map, open("%s/%s/target_age_id_map.json" % (
+                self.conf['log'], self.conf["data_path"].split('/')[-1].split('.')[0]), "w"), indent=4)
+            json.dump(ele_id_map, open("%s/%s/ele_id_map.json" % (
+                self.conf['log'], self.conf["data_path"].split('/')[-1].split('.')[0]), "w"), indent=4)
+            json.dump(grp_id_map, open("%s/%s/grp_id_map.json" % (
+                self.conf['log'], self.conf["data_path"].split('/')[-1].split('.')[0]), "w"), indent=4)
         else:
+            Path("./log/%s"%(self.conf["data_path"].split('/')[-1].split('.')[0]) ).mkdir(parents=True, exist_ok=True)
             json.dump(grp_ele_id,
-                      open("./log/%s_%d/test_grp_ele_id_map.json"%(self.conf["dataset"],self.conf["output_len"]),"w"),
+                      open("./log/%s/test_grp_ele_id_map.json"%(self.conf["data_path"].split('/')[-1].split('.')[0]),"w"),
                       indent=4)
-
-
-        json.dump(location_id_map, open("location_id_map.json", "w"), indent=4)
-        json.dump(segment_id_map, open("segment_id_map.json", "w"), indent=4)
-        json.dump(target_age_id_map, open("target_age_id_map.json", "w"), indent=4)
+            json.dump(location_id_map, open("./log/%s/location_id_map.json"%(self.conf["data_path"].split('/')[-1].split('.')[0]), "w"), indent=4)
+            json.dump(segment_id_map, open("./log/%s/segment_id_map.json"%(self.conf["data_path"].split('/')[-1].split('.')[0]), "w"), indent=4)
+            json.dump(target_age_id_map, open("./log/%s/target_age_id_map.json"%(self.conf["data_path"].split('/')[-1].split('.')[0]), "w"), indent=4)
+            json.dump(ele_id_map, open("./log/%s/ele_id_map.json"%(self.conf["data_path"].split('/')[-1].split('.')[0]), "w"), indent=4)
+            json.dump(grp_id_map, open("./log/%s/grp_id_map.json"%(self.conf["data_path"].split('/')[-1].split('.')[0]), "w"), indent=4)
 
         self.location_id_map = location_id_map
         self.segment_id_map = segment_id_map

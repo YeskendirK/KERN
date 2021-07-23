@@ -172,10 +172,12 @@ def train(conf, opt):
 
             enc_loss, dec_loss, triplet_loss = model(self_cont, close_cont, far_cont, close_score, far_score)
 
+            enc_w = 0.25
+            dec_w = 1 - enc_w
             if conf["int_kg"] is True:
-                loss = 0.25 * enc_loss + 0.75 * dec_loss + conf["triplet_lambda"] * triplet_loss
+                loss = enc_w * enc_loss + dec_w * dec_loss + conf["triplet_lambda"] * triplet_loss
             else:
-                loss = 0.25 * enc_loss + 0.75 * dec_loss
+                loss = enc_w * enc_loss + dec_w * dec_loss
             loss.backward()
             optimizer.step()
             if "lr_scheduler" in conf and conf["lr_scheduler"] == "Plateau":

@@ -45,9 +45,9 @@ geostyle:
   denorm: true # whether to denormalization after the predction
 
 omnious:
-  data_path: "./dataset/omnious/01072021_auto_data.json"
-  data_norm_path: "./dataset/omnious/01072021_auto_data_norm.json"
-  dist_mat_path: "./dataset/omnious/01072021_auto_dist_mat_ver2.npy"
+  data_path: "./dataset/omnious/07072021_auto_data.json"
+  data_norm_path: "./dataset/omnious/07072021_auto_data_norm.json"
+  dist_mat_path: "./dataset/omnious/07072021_auto_dist_mat_ver2.npy"
   fashion_data_path: "./dataset/omnious/01072021_auto_fashion_data.json"
   fashion_data_norm_path: "./dataset/omnious/01072021_auto_fashion_data_norm.json"
   input_len: 12

@@ -67,17 +67,21 @@ def main(opt):
 
     # write to tsv file
 
-    # with open("./evaluation_per_element.tsv", "wt") as out_file:
-    #     tsv_writer = csv.writer(out_file, delimiter='\t')
-    #     tsv_writer.writerow(["GROUP", "MAE" , "MAPE" , "VAL_MAE" , "VAL_MAPE" , "TEST_MAE" , "TEST_MAPE"])
-    #     for ele_name in ele_names:
-    #         tsv_writer.writerow([ele_name, mae_map[ele_name], mape_map[ele_name], val_mae_map[ele_name], val_mape_map[ele_name],
-    #         test_mae_map[ele_name], test_mape_map[ele_name]])
+    out_filename = "./" + opt.save_filename_tsv
+    with open(out_filename, "wt") as out_file:
+        tsv_writer = csv.writer(out_file, delimiter='\t')
+        tsv_writer.writerow(["GROUP", "MAE", "MAPE", "VAL_MAE", "VAL_MAPE", "TEST_MAE", "TEST_MAPE"])
+        for ele_name in ele_names:
+            tsv_writer.writerow([ele_name, mae_map[ele_name], mape_map[ele_name], val_mae_map[ele_name],
+                                 val_mape_map[ele_name], test_mae_map[ele_name], test_mape_map[ele_name]])
+
+        print("written results to ", out_filename)
 
     print("GROUP, MAE , MAPE , VAL_MAE , VAL_MAPE , TEST_MAE , TEST_MAPE ")
-    for ele_name in ele_names:
-        if ele_name in mae_map.keys():
-            continue
+
+    fashion_attributes = ['item', 'color', 'length', 'fit', 'shape', 'neckline', 'collar',
+                        'look', 'gender', 'sleeve_length', 'sleeve_shape', 'design_detail', 'material', 'print']
+    for ele_name in fashion_attributes:
         print("%s, %.6f, %.6f, %.6f, %.6f, %.6f, %.6f" % (
             ele_name, mae_map[ele_name], mape_map[ele_name], val_mae_map[ele_name], val_mape_map[ele_name],
             test_mae_map[ele_name], test_mape_map[ele_name]))
@@ -221,6 +225,7 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', type=str, default='fit', help='dataset: fit or geostyle or omnious')
     parser.add_argument('--device', default='0', help='cuda device, i.e. 0 or cpu')
     parser.add_argument('--weights', type=str, default='', help='initial weights path')
+    parser.add_argument('--save_filename_tsv', type=str, default='evaluation_per_element_delete.tsv', help="file name to save")
 
     opt = parser.parse_args()
     main(opt)
